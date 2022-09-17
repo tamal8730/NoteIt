@@ -65,4 +65,7 @@ dependencies {
 
     implementation "com.github.skydoves:landscapist-glide:2.0.0"
 
+    def nav_version = "2.5.2"
+    implementation("androidx.navigation:navigation-compose:$nav_version")
+
 }

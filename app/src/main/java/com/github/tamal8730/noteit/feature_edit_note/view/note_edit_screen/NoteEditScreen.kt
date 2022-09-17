@@ -23,25 +23,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.tamal8730.noteit.core.view.NoteItTextField
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
+import com.github.tamal8730.noteit.feature_edit_note.view_model.NoteEditScreenViewModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 
 @Composable
-fun NoteEditScreen() {
-
-    var title by remember { mutableStateOf("") }
-    var body by remember { mutableStateOf("") }
-    var showList by remember { mutableStateOf(false) }
-    var showCoverImage by remember { mutableStateOf(false) }
-    var tasks by remember { mutableStateOf(listOf<TaskUIModel>()) }
-
-    var coverImageURI by remember { mutableStateOf<Uri?>(null) }
+fun NoteEditScreen(
+    viewModel: NoteEditScreenViewModel
+) {
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {
             if (it != null) {
-                coverImageURI = it; showCoverImage = true
+                viewModel.addCoverImage(it)
             }
         }
     )
@@ -62,13 +57,12 @@ fun NoteEditScreen() {
         },
         bottomBar = {
             TextOptionsBar(
-                onToggleList = { showList = it },
+                onToggleList = { if (it) viewModel.addTaskList() else viewModel.removeTaskList() },
                 onToggleCoverImage = {
                     if (it) {
                         launcher.launch("image/*")
                     } else {
-                        coverImageURI = null
-                        showCoverImage = false
+                        viewModel.removeCoverImage()
                     }
                 }
             )
@@ -78,8 +72,8 @@ fun NoteEditScreen() {
         {
             Column {
 
-                if (showCoverImage) {
-                    CoverImage(coverImageURI)
+                if (viewModel.coverImageAdded.collectAsState().value) {
+                    CoverImage(viewModel.coverImageUri.collectAsState().value)
                 }
 
                 Column(
@@ -88,7 +82,7 @@ fun NoteEditScreen() {
                 ) {
                     NoteItTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        text = title,
+                        text = viewModel.title.collectAsState().value,
                         textStyle = MaterialTheme.typography.h5.copy(
                             color = MaterialTheme.colors.onBackground,
                             fontWeight = FontWeight.Bold
@@ -100,13 +94,13 @@ fun NoteEditScreen() {
                                     alpha = ContentAlpha.medium
                                 )
                             ),
-                        onValueChanged = { text -> title = text }
+                        onValueChanged = { text -> viewModel.editTitle(text) }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     NoteItTextField(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = body,
+                        text = viewModel.body.collectAsState().value,
                         textStyle = MaterialTheme.typography.body1.copy(
                             color = MaterialTheme.colors.onBackground,
                             lineHeight = 26.sp
@@ -118,24 +112,22 @@ fun NoteEditScreen() {
                                     alpha = ContentAlpha.medium
                                 )
                             ),
-                        onValueChanged = { text -> body = text }
+                        onValueChanged = { text -> viewModel.editBody(text) }
                     )
-                    if (showList) {
+                    if (viewModel.tasksAdded.collectAsState().value) {
+
+                        val tasks = viewModel.tasks.collectAsState().value ?: listOf()
+
                         Spacer(modifier = Modifier.height(24.dp))
                         TaskList(
                             tasks = tasks,
-                            onAddNewItem = {
-                                tasks = tasks + TaskUIModel("", false)
-                            },
+                            onAddNewItem = { viewModel.addTask() },
                             onEditTask = { task, text ->
-                                tasks = tasks.map { taskModel ->
-                                    if (taskModel == task) taskModel.copy(task = text) else taskModel
-                                }
+                                viewModel.editTask(task, text)
                             },
                             onToggleTask = { task, checked ->
-                                tasks = tasks.map { taskModel ->
-                                    if (taskModel == task) taskModel.copy(complete = !checked) else taskModel
-                                }
+                                if (checked) viewModel.unCheckTask(task)
+                                else viewModel.checkTask(task)
                             }
                         )
                     }
@@ -171,7 +163,7 @@ private fun TaskList(
 
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
-            tasks.map {
+            tasks.map { it ->
                 ListItem(
                     task = it.task,
                     selected = it.complete,
