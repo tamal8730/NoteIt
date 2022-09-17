@@ -8,6 +8,7 @@ object FakeDB {
 
     private val notes = mutableMapOf<String, NoteModel>(
         "0" to NoteModel(
+            id = "0",
             title = "Sita Ramam",
             body = "Sita Ramam is a 2022 Indian Telugu-language period romantic drama film written and directed by Hanu Raghavapudi and produced by Vyjayanthi Movies and Swapna Cinema. The film stars Dulquer Salmaan, Mrunal Thakur (in her Telugu debut), Rashmika Mandanna and Sumanth. Set in 1964, Lieutenant Ram, an orphan Indian army officer serving at the Kashmir border, gets anonymous love letters from Sita Mahalakshmi. Ram is on a mission to find Sita and propose his love.",
             coverImage = "content://com.android.providers.media.documents/document/image%3A149673",
@@ -16,6 +17,7 @@ object FakeDB {
             color = null,
         ),
         "1" to NoteModel(
+            id = "1",
             title = "Bhanu Bandopadhyay",
             body = "Bhanu Bandyopadhyay, also known as Bhanu Banerjee (born as Samyamoy Bandyopadhyay; 26 August 1920[1] – 4 March 1983), was an Indian actor, known for his work in Bengali cinema. He acted in over 300 movies, in numerous plays and performed frequently on the radio.",
             coverImage = null,

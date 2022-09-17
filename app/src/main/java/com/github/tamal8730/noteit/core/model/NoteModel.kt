@@ -1,6 +1,7 @@
 package com.github.tamal8730.noteit.core.model
 
 data class NoteModel(
+    val id: String,
     val title: String? = null,
     val body: String = "",
     val coverImage: String? = null,
