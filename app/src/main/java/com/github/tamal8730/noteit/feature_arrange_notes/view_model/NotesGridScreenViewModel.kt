@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.github.tamal8730.noteit.core.util.TimestampFormatter
 import com.github.tamal8730.noteit.feature_arrange_notes.repository.NotesArrangeRepository
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.NoteUIModel
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
@@ -13,11 +14,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class NotesGridScreenViewModelFactory(
-    private val notesArrangeRepository: NotesArrangeRepository
+    private val notesArrangeRepository: NotesArrangeRepository,
+    private val lastEditTimeFormatter: TimestampFormatter
 ) : ViewModelProvider.NewInstanceFactory() {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        NotesGridScreenViewModel(notesArrangeRepository) as T
+        NotesGridScreenViewModel(notesArrangeRepository, lastEditTimeFormatter) as T
 
 }
 
@@ -29,7 +31,8 @@ sealed class NotesGridScreenUIState {
 }
 
 class NotesGridScreenViewModel(
-    private val notesArrangeRepository: NotesArrangeRepository
+    private val notesArrangeRepository: NotesArrangeRepository,
+    private val lastEditTimeFormatter: TimestampFormatter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<NotesGridScreenUIState>(NotesGridScreenUIState.Empty)
@@ -55,7 +58,7 @@ class NotesGridScreenViewModel(
                         body = it.body,
                         coverImage = if (it.coverImage == null || it.coverImage.isBlank()) null
                         else Uri.parse(it.coverImage),
-                        lastModifiedAt = "Aug 29",
+                        lastModifiedAt = lastEditTimeFormatter.format(it.lastModifiedAt),
                         tasks = it.tasks?.map { task -> TaskUIModel(task.task, task.complete) },
                         color = it.color
                     )

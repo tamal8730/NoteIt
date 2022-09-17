@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.github.tamal8730.noteit.feature_arrange_notes.repository.impl.NotesArrangeRepositoryImpl
+import com.github.tamal8730.noteit.feature_arrange_notes.util.last_edit_datetime_formatter.TimeOrDateDateTimeFormatter
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.NotesGridScreen
 import com.github.tamal8730.noteit.feature_arrange_notes.view_model.NotesGridScreenViewModelFactory
 import com.github.tamal8730.noteit.feature_edit_note.repository.impl.NoteEditRepositoryImpl
@@ -22,7 +23,8 @@ fun SetupNavGraph(navController: NavHostController) {
             NotesGridScreen(
                 viewModel = viewModel(
                     factory = NotesGridScreenViewModelFactory(
-                        notesArrangeRepository = NotesArrangeRepositoryImpl()
+                        notesArrangeRepository = NotesArrangeRepositoryImpl(),
+                        lastEditTimeFormatter = TimeOrDateDateTimeFormatter()
                     )
                 ),
                 onEditNote = {},
