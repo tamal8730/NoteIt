@@ -1,6 +1,7 @@
 package com.github.tamal8730.noteit.feature_edit_note.view.note_edit_screen
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -32,6 +33,9 @@ fun NoteEditScreen(
     viewModel: NoteEditScreenViewModel
 ) {
 
+    val taskListAdded = viewModel.tasksAdded.collectAsState().value
+    val coverImageAdded = viewModel.coverImageAdded.collectAsState().value
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {
@@ -57,7 +61,9 @@ fun NoteEditScreen(
         },
         bottomBar = {
             TextOptionsBar(
+                listChecked = taskListAdded,
                 onToggleList = { if (it) viewModel.addTaskList() else viewModel.removeTaskList() },
+                coverImageChecked = coverImageAdded,
                 onToggleCoverImage = {
                     if (it) {
                         launcher.launch("image/*")
@@ -72,7 +78,7 @@ fun NoteEditScreen(
         {
             Column {
 
-                if (viewModel.coverImageAdded.collectAsState().value) {
+                if (coverImageAdded) {
                     CoverImage(viewModel.coverImageUri.collectAsState().value)
                 }
 
@@ -114,7 +120,7 @@ fun NoteEditScreen(
                             ),
                         onValueChanged = { text -> viewModel.editBody(text) }
                     )
-                    if (viewModel.tasksAdded.collectAsState().value) {
+                    if (taskListAdded) {
 
                         val tasks = viewModel.tasks.collectAsState().value ?: listOf()
 
@@ -248,10 +254,12 @@ private fun CheckCircle(isChecked: Boolean, onClick: (Boolean) -> Unit) {
 
 
 @Composable
-fun TextOptionsBar(onToggleList: (Boolean) -> Unit, onToggleCoverImage: (Boolean) -> Unit) {
-
-    var listChecked by remember { mutableStateOf(false) }
-    var coverImageChecked by remember { mutableStateOf(false) }
+fun TextOptionsBar(
+    listChecked: Boolean,
+    onToggleList: (Boolean) -> Unit,
+    coverImageChecked: Boolean,
+    onToggleCoverImage: (Boolean) -> Unit
+) {
 
     Box(
         modifier = Modifier
@@ -263,14 +271,14 @@ fun TextOptionsBar(onToggleList: (Boolean) -> Unit, onToggleCoverImage: (Boolean
 
             IconToggleButton(
                 checked = coverImageChecked,
-                onCheckedChange = { coverImageChecked = it; onToggleCoverImage(it) }
+                onCheckedChange = { onToggleCoverImage(it) }
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "add list")
             }
 
             IconToggleButton(
                 checked = listChecked,
-                onCheckedChange = { listChecked = it; onToggleList(it) }
+                onCheckedChange = { onToggleList(it) }
             ) {
                 Icon(Icons.Filled.List, contentDescription = "add list")
             }
