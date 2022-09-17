@@ -52,7 +52,7 @@ fun NotesGridScreen(
         },
         floatingActionButton = {
             if (uiState is NotesGridScreenUIState.Loaded) {
-                FloatingActionButton(onClick = {}) {
+                FloatingActionButton(onClick = { onCreateNewNote() }) {
                     Icon(
                         Icons.Filled.Add,
                         contentDescription = "New note"

@@ -31,7 +31,8 @@ import com.skydoves.landscapist.glide.GlideImage
 
 @Composable
 fun NoteEditScreen(
-    viewModel: NoteEditScreenViewModel
+    viewModel: NoteEditScreenViewModel,
+    onBack: () -> Unit,
 ) {
 
     val taskListAdded = viewModel.tasksAdded.collectAsState().value
@@ -51,7 +52,7 @@ fun NoteEditScreen(
             TopAppBar(
                 title = { Text(text = "") },
                 navigationIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { onBack() }) {
                         Icon(Icons.Filled.ArrowBack, "back")
                     }
                 },

@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class NoteEditScreenViewModelFactory(
     private val noteEditRepository: NoteEditRepository,
-    private val noteID: String,
+    private val noteID: String?,
 ) : ViewModelProvider.NewInstanceFactory() {
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
         NoteEditScreenViewModel(noteEditRepository, noteID) as T
@@ -22,7 +22,7 @@ class NoteEditScreenViewModelFactory(
 
 class NoteEditScreenViewModel(
     private val noteEditRepository: NoteEditRepository,
-    private val noteID: String,
+    private val noteID: String?,
 ) : ViewModel() {
 
     private val _title by lazy { MutableStateFlow<String>("") }
@@ -107,7 +107,10 @@ class NoteEditScreenViewModel(
 
 
     private fun loadNote() = viewModelScope.launch {
-        val note = noteEditRepository.loadNote(noteID) ?: return@launch
+
+        val note = if (noteID == null) return@launch
+        else noteEditRepository.loadNote(noteID) ?: return@launch
+
         _title.value = note.title ?: ""
         _body.value = note.body
         _coverImageAdded.value = note.coverImage != null
