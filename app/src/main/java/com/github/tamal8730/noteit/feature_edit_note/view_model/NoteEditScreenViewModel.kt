@@ -4,8 +4,13 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.github.tamal8730.noteit.core.model.NoteModel
+import com.github.tamal8730.noteit.core.model.TaskListItemModel
+import com.github.tamal8730.noteit.core.util.DateTime
+import com.github.tamal8730.noteit.core.util.TimestampFormatter
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_edit_note.repository.NoteEditRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,15 +19,17 @@ import kotlinx.coroutines.launch
 class NoteEditScreenViewModelFactory(
     private val noteEditRepository: NoteEditRepository,
     private val noteID: String?,
+    private val lastUpdateTimestampFormatter: TimestampFormatter,
 ) : ViewModelProvider.NewInstanceFactory() {
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        NoteEditScreenViewModel(noteEditRepository, noteID) as T
+        NoteEditScreenViewModel(noteEditRepository, noteID, lastUpdateTimestampFormatter) as T
 
 }
 
 class NoteEditScreenViewModel(
     private val noteEditRepository: NoteEditRepository,
     private val noteID: String?,
+    private val lastUpdateTimestampFormatter: TimestampFormatter,
 ) : ViewModel() {
 
     private val _title by lazy { MutableStateFlow<String>("") }
@@ -43,9 +50,13 @@ class NoteEditScreenViewModel(
     private val _tasks by lazy { MutableStateFlow<List<TaskUIModel>>(listOf()) }
     val tasks: StateFlow<List<TaskUIModel>> by lazy { _tasks.asStateFlow() }
 
+    private val _lastUpdatedTimestamp by lazy { MutableStateFlow<String>("") }
+    val lastUpdatedTimestamp: StateFlow<String> = _lastUpdatedTimestamp.asStateFlow()
+
 
     init {
         loadNote()
+        saveNote()
     }
 
 
@@ -105,6 +116,49 @@ class NoteEditScreenViewModel(
     }
     //-----------------------------------
 
+    private fun isNoteEmpty(): Boolean {
+        return _title.value.isBlank()
+                && _body.value.isBlank()
+                && !(coverImageAdded.value)
+                && coverImageUri.value == null
+                && !(tasksAdded.value)
+                && tasks.value.isEmpty()
+    }
+
+    private fun saveNote() = viewModelScope.launch {
+
+        delay(2000)
+
+        while (true) {
+
+            if (!isNoteEmpty()) {
+
+                _lastUpdatedTimestamp.value = "saving..."
+                val updatedTime = DateTime.now().toISO8601Timestamp()
+
+                val note = NoteModel(
+                    id = noteID ?: "",
+                    title = _title.value,
+                    body = _body.value,
+                    coverImage = _coverImageUri.value?.toString(),
+                    lastModifiedAt = updatedTime,
+                    tasks = if (_tasks.value.isEmpty()) null
+                    else _tasks.value.map {
+                        TaskListItemModel(it.task, it.complete)
+                    },
+                    color = null,
+                )
+
+                noteEditRepository.saveNote(note)
+                _lastUpdatedTimestamp.value = "Updated " +
+                        lastUpdateTimestampFormatter.format(updatedTime)
+            }
+
+            delay(5000)
+
+        }
+
+    }
 
     private fun loadNote() = viewModelScope.launch {
 
@@ -119,6 +173,8 @@ class NoteEditScreenViewModel(
         _tasks.value = note.tasks?.map {
             TaskUIModel(it.task, it.complete)
         } ?: listOf()
+        _lastUpdatedTimestamp.value = "Updated " +
+                lastUpdateTimestampFormatter.format(note.lastModifiedAt)
     }
 
 }

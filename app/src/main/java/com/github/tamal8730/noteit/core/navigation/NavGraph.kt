@@ -12,6 +12,7 @@ import com.github.tamal8730.noteit.feature_arrange_notes.util.last_edit_datetime
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.NotesGridScreen
 import com.github.tamal8730.noteit.feature_arrange_notes.view_model.NotesGridScreenViewModelFactory
 import com.github.tamal8730.noteit.feature_edit_note.repository.impl.NoteEditRepositoryImpl
+import com.github.tamal8730.noteit.feature_edit_note.util.LastUpdatedDateTimeFormatter
 import com.github.tamal8730.noteit.feature_edit_note.view.note_edit_screen.NoteEditScreen
 import com.github.tamal8730.noteit.feature_edit_note.view_model.NoteEditScreenViewModelFactory
 
@@ -56,7 +57,8 @@ fun SetupNavGraph(navController: NavHostController) {
                 viewModel = viewModel(
                     factory = NoteEditScreenViewModelFactory(
                         noteEditRepository = NoteEditRepositoryImpl(),
-                        noteID = noteID
+                        noteID = noteID,
+                        lastUpdateTimestampFormatter = LastUpdatedDateTimeFormatter()
                     )
                 ),
                 onBack = {

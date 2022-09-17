@@ -34,8 +34,12 @@ object FakeDB {
 
     suspend fun addNote(note: NoteModel) {
         delay(1000)
-        val key = (notes.size + 1).toString()
-        notes[key] = note
+        if(notes.containsKey(note.id)){
+            notes[note.id] = note
+        }else {
+            val key = (notes.size + 1).toString()
+            notes[key] = note
+        }
     }
 
     suspend fun getNote(id: String): NoteModel? {
