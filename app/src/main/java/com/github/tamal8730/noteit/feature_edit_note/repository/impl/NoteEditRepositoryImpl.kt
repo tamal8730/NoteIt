@@ -43,7 +43,8 @@ class NoteEditRepositoryImpl(private val noteDao: NoteDao) : NoteEditRepository 
             coverImage = entity.note.coverImage,
             lastModifiedAt = entity.note.lastModifiedAt,
             color = entity.note.color,
-            tasks = entity.tasks.map {
+            tasks = if (entity.tasks.isEmpty()) null
+            else entity.tasks.map {
                 TaskListItemModel(it.task, it.complete)
             }
         )

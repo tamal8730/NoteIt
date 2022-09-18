@@ -19,6 +19,6 @@ data class NoteEntity(
     val coverImage: String?,
     val lastModifiedAt: String,
 
-    val color: Int?
+    val color: Long?
 
 )

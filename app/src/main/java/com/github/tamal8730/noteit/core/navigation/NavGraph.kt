@@ -18,6 +18,7 @@ import com.github.tamal8730.noteit.feature_edit_note.repository.impl.NoteEditRep
 import com.github.tamal8730.noteit.feature_edit_note.util.LastUpdatedDateTimeFormatter
 import com.github.tamal8730.noteit.feature_edit_note.view.note_edit_screen.NoteEditScreen
 import com.github.tamal8730.noteit.feature_edit_note.view_model.NoteEditScreenViewModelFactory
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
 @Composable
@@ -25,12 +26,14 @@ fun SetupNavGraph(navController: NavHostController) {
 
     val context = LocalContext.current
     val noteDao = NoteDb.getInstance(context).noteDao()
+    val systemUiController = rememberSystemUiController()
 
     NavHost(navController = navController, startDestination = Screen.NotesGridScreen.route) {
 
         composable(route = Screen.NotesGridScreen.route) {
 
             NotesGridScreen(
+                systemUiController = systemUiController,
                 viewModel = viewModel(
                     factory = NotesGridScreenViewModelFactory(
                         notesArrangeRepository = NotesArrangeRepositoryImpl(noteDao = noteDao),
@@ -63,6 +66,7 @@ fun SetupNavGraph(navController: NavHostController) {
             val noteID = backStackEntry.arguments?.getString(Screen.EditNoteScreen.argNoteID)
 
             NoteEditScreen(
+                systemUiController = systemUiController,
                 viewModel = viewModel(
                     factory = NoteEditScreenViewModelFactory(
                         noteEditRepository = NoteEditRepositoryImpl(noteDao),

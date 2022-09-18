@@ -14,30 +14,58 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.tamal8730.noteit.R
 import com.github.tamal8730.noteit.core.view.NoteItTextField
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_edit_note.view_model.NoteEditScreenViewModel
+import com.google.accompanist.systemuicontroller.SystemUiController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+
+
+private val noteColorPresets = listOf(
+    0xFF1B1B1B,
+    0xFF464D77,
+    0xFF5277E0,
+    0xFF36827F,
+    0xFF7B5E7B,
+    0xFF0D3B66,
+    0xFF230007,
+    0xFFAE76A6,
+    0xFFA5243D
+)
 
 @Composable
 fun NoteEditScreen(
     viewModel: NoteEditScreenViewModel,
+    systemUiController: SystemUiController,
     onBack: () -> Unit,
 ) {
 
     val taskListAdded = viewModel.tasksAdded.collectAsState().value
     val coverImageAdded = viewModel.coverImageAdded.collectAsState().value
     val lastUpdatedTime = viewModel.lastUpdatedTimestamp.collectAsState().value
+    val noteColor = viewModel.noteColor.collectAsState().value ?: noteColorPresets[0]
+
+    val color = Color(noteColor)
+
+    SideEffect {
+        systemUiController.setSystemBarsColor(color, darkIcons = false)
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -66,7 +94,7 @@ fun NoteEditScreen(
                         Icon(Icons.Filled.ArrowBack, "back")
                     }
                 },
-                backgroundColor = MaterialTheme.colors.background,
+                backgroundColor = color,
                 contentColor = MaterialTheme.colors.onBackground,
                 elevation = 0.dp
             )
@@ -82,9 +110,18 @@ fun NoteEditScreen(
                     } else {
                         viewModel.removeCoverImage()
                     }
-                }
+                },
+                noteColor = noteColor,
+                showColorMenu = viewModel.colorMenuShown.collectAsState().value,
+                onClickColorMenu = { viewModel.toggleColorMenu() },
+                onSelectNoteColor = {
+                    viewModel.setNoteColor(it)
+                    systemUiController.setSystemBarsColor(Color(it), darkIcons = false)
+                },
+                onDismissColorMenu = { viewModel.dismissColorMenu() }
             )
-        }
+        },
+        backgroundColor = color
     ) {
         Box(modifier = Modifier.padding(it))
         {
@@ -134,7 +171,7 @@ fun NoteEditScreen(
                     )
                     if (taskListAdded) {
 
-                        val tasks = viewModel.tasks.collectAsState().value ?: listOf()
+                        val tasks = viewModel.tasks.collectAsState().value
 
                         Spacer(modifier = Modifier.height(24.dp))
                         TaskList(
@@ -199,9 +236,13 @@ private fun TaskList(
         Row(modifier = Modifier.clickable {
             onAddNewItem()
         }) {
-            Icon(Icons.Filled.Add, contentDescription = "add task")
+            Icon(
+                Icons.Filled.Add,
+                contentDescription = "add task",
+                tint = MaterialTheme.colors.onBackground
+            )
             Spacer(modifier = Modifier.width(16.dp))
-            Text("Add new item")
+            Text("Add new item", color = MaterialTheme.colors.onBackground)
         }
     }
 
@@ -270,7 +311,12 @@ fun TextOptionsBar(
     listChecked: Boolean,
     onToggleList: (Boolean) -> Unit,
     coverImageChecked: Boolean,
-    onToggleCoverImage: (Boolean) -> Unit
+    onToggleCoverImage: (Boolean) -> Unit,
+    noteColor: Long,
+    showColorMenu: Boolean,
+    onClickColorMenu: () -> Unit,
+    onSelectNoteColor: (color: Long) -> Unit,
+    onDismissColorMenu: () -> Unit,
 ) {
 
     Box(
@@ -279,21 +325,88 @@ fun TextOptionsBar(
             .fillMaxWidth()
             .background(color = MaterialTheme.colors.surface)
     ) {
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
 
             IconToggleButton(
                 checked = coverImageChecked,
                 onCheckedChange = { onToggleCoverImage(it) }
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "add list")
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_image),
+                    contentDescription = "add list",
+                    tint = if (coverImageChecked) MaterialTheme.colors.primary
+                    else MaterialTheme.colors.onBackground
+                )
             }
 
             IconToggleButton(
                 checked = listChecked,
                 onCheckedChange = { onToggleList(it) }
             ) {
-                Icon(Icons.Filled.List, contentDescription = "add list")
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_list),
+                    contentDescription = "add list",
+                    tint = if (listChecked) MaterialTheme.colors.primary
+                    else MaterialTheme.colors.onBackground
+                )
             }
+
+            Spacer(
+                modifier = Modifier
+                    .width(8.dp)
+                    .weight(1f)
+            )
+
+            ColorCircle(
+                color = noteColor,
+                showColorMenu = showColorMenu,
+                onClick = onClickColorMenu,
+                onSelectColor = onSelectNoteColor,
+                onDismissColorMenu = onDismissColorMenu,
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun ColorCircle(
+    color: Long,
+    showColorMenu: Boolean,
+    onClick: () -> Unit,
+    onSelectColor: (color: Long) -> Unit,
+    onDismissColorMenu: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .height(24.dp)
+            .width(24.dp)
+            .background(color = MaterialTheme.colors.onSurface, shape = CircleShape)
+            .padding(2.dp)
+            .background(color = Color(color), shape = CircleShape)
+            .clickable { onClick() }
+    ) {
+        DropdownMenu(expanded = showColorMenu, onDismissRequest = onDismissColorMenu) {
+
+            noteColorPresets.map { selectedColor ->
+
+                DropdownMenuItem(onClick = { onSelectColor(selectedColor) }) {
+                    Box(
+                        modifier = Modifier
+                            .height(24.dp)
+                            .width(24.dp)
+                            .background(color = MaterialTheme.colors.onSurface, shape = CircleShape)
+                            .padding(2.dp)
+                            .background(color = Color(selectedColor), shape = CircleShape)
+                            .clickable { onClick() }
+                    )
+                }
+
+            }
+
         }
     }
 }

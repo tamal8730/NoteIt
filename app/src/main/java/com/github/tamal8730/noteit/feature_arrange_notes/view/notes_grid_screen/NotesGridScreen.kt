@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,8 @@ import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_arrange_notes.view_model.NotesGridScreenUIState
 import com.github.tamal8730.noteit.feature_arrange_notes.view_model.NotesGridScreenViewModel
+import com.google.accompanist.systemuicontroller.SystemUiController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 
@@ -41,15 +44,23 @@ import com.skydoves.landscapist.glide.GlideImage
 fun NotesGridScreen(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     viewModel: NotesGridScreenViewModel,
+    systemUiController: SystemUiController,
     onEditNote: (id: Long) -> Unit,
     onCreateNewNote: () -> Unit,
 ) {
+
+    val backgroundColor = MaterialTheme.colors.background
+
+    SideEffect {
+        systemUiController.setSystemBarsColor(backgroundColor, darkIcons = false)
+    }
 
     DisposableEffect(lifecycleOwner) {
 
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.loadAllNotes()
+                systemUiController.setSystemBarsColor(backgroundColor, darkIcons = false)
             }
         }
 

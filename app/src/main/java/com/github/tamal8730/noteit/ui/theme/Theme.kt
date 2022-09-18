@@ -13,10 +13,13 @@ private val DarkColorPalette = darkColors(
     primary = Color(0xFF5277E0),
     primaryVariant = Purple700,
     secondary = Color(0xFF5277E0),
+
     background = Color(0xFF1B1B1B),
     surface = Color(0xFF212121),
     onPrimary = Color.White,
-    onSecondary = Color.White
+    onSecondary = Color.White,
+    onSurface = Color.White,
+    onBackground = Color.White
 )
 
 private val LightColorPalette = lightColors(
@@ -42,12 +45,12 @@ fun NoteItTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable
         LightColorPalette
     }
 
-    // Remember a SystemUiController
-    val systemUiController = rememberSystemUiController()
-
-    SideEffect {
-        systemUiController.setSystemBarsColor(colors.background, darkIcons = !darkTheme)
-    }
+//    // Remember a SystemUiController
+//    val systemUiController = rememberSystemUiController()
+//
+//    SideEffect {
+//        systemUiController.setSystemBarsColor(colors.background, darkIcons = !darkTheme)
+//    }
 
     MaterialTheme(
         colors = colors,

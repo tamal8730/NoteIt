@@ -7,5 +7,5 @@ data class NoteModel(
     val coverImage: String? = null,
     val lastModifiedAt: String,
     val tasks: List<TaskListItemModel>? = null,
-    val color: Int? = null,
+    val color: Long? = null,
 )

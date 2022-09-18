@@ -9,5 +9,5 @@ data class NoteUIModel(
     val coverImage: Uri?,
     val lastModifiedAt: String,
     val tasks: List<TaskUIModel>?,
-    val color: Int?,
+    val color: Long?,
 )

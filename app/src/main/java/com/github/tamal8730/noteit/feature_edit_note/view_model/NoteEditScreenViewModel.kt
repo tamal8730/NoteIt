@@ -10,6 +10,7 @@ import com.github.tamal8730.noteit.core.util.DateTime
 import com.github.tamal8730.noteit.core.util.TimestampFormatter
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_edit_note.repository.NoteEditRepository
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +33,7 @@ class NoteEditScreenViewModel(
     private val lastUpdateTimestampFormatter: TimestampFormatter,
 ) : ViewModel() {
 
+
     private val _title by lazy { MutableStateFlow<String>("") }
     val title: StateFlow<String> by lazy { _title.asStateFlow() }
 
@@ -52,6 +54,12 @@ class NoteEditScreenViewModel(
 
     private val _lastUpdatedTimestamp by lazy { MutableStateFlow<String>("") }
     val lastUpdatedTimestamp: StateFlow<String> = _lastUpdatedTimestamp.asStateFlow()
+
+    private val _noteColor by lazy { MutableStateFlow<Long?>(null) }
+    val noteColor: StateFlow<Long?> = _noteColor.asStateFlow()
+
+    private val _colorMenuShown by lazy { MutableStateFlow<Boolean>(false) }
+    val colorMenuShown: StateFlow<Boolean> = _colorMenuShown.asStateFlow()
 
 
     init {
@@ -146,7 +154,7 @@ class NoteEditScreenViewModel(
                     else _tasks.value.map {
                         TaskListItemModel(it.task, it.complete)
                     },
-                    color = null,
+                    color = _noteColor.value,
                 )
 
                 noteID = noteEditRepository.saveNote(note)
@@ -154,8 +162,7 @@ class NoteEditScreenViewModel(
                         lastUpdateTimestampFormatter.format(updatedTime)
             }
 
-            delay(7000)
-
+            delay(3000)
 
 
         }
@@ -179,6 +186,21 @@ class NoteEditScreenViewModel(
         } ?: listOf()
         _lastUpdatedTimestamp.value = "Updated " +
                 lastUpdateTimestampFormatter.format(note.lastModifiedAt)
+        _noteColor.value = note.color
+    }
+
+
+    fun toggleColorMenu() {
+        _colorMenuShown.value = !_colorMenuShown.value
+    }
+
+    fun dismissColorMenu() {
+        _colorMenuShown.value = false
+    }
+
+    fun setNoteColor(color: Long) {
+        _noteColor.value = color
+        _colorMenuShown.value = false
     }
 
 }
