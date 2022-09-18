@@ -1,12 +1,15 @@
 package com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen
 
 import android.net.Uri
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -40,6 +43,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotesGridScreen(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
@@ -106,17 +110,40 @@ fun NotesGridScreen(
 
                     val notes = uiState.notes
 
-                    LazyVerticalGrid(
-                        modifier = Modifier.fillMaxSize(),
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    LazyVerticalStaggeredGrid(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        columns = StaggeredGridCells.Fixed(2),
+                        userScrollEnabled = true,
                     ) {
                         items(notes.size) { index ->
-                            Note(note = notes[index]) { onEditNote(notes[index].id) }
+
+                            val col = index % 2
+
+                            val padding =
+                                if (col == 0) PaddingValues(end = 8.dp, top = 8.dp, bottom = 8.dp)
+                                else PaddingValues(start = 8.dp, top = 8.dp, bottom = 8.dp)
+
+                            Note(
+                                note = notes[index],
+                                paddingValues = padding
+                            ) { onEditNote(notes[index].id) }
+
                         }
                     }
+
+//                    LazyVerticalGrid(
+//                        modifier = Modifier.fillMaxSize(),
+//                        columns = GridCells.Fixed(2),
+//                        contentPadding = PaddingValues(16.dp),
+//                        verticalArrangement = Arrangement.spacedBy(16.dp),
+//                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+//                    ) {
+//                        items(notes.size) { index ->
+//                            Note(note = notes[index]) { onEditNote(notes[index].id) }
+//                        }
+//                    }
 
                 }
 
@@ -169,9 +196,10 @@ private fun Loading() {
 }
 
 @Composable
-private fun Note(note: NoteUIModel, onClick: () -> Unit) {
+private fun Note(note: NoteUIModel, paddingValues: PaddingValues, onClick: () -> Unit) {
     Box(
         modifier = Modifier
+            .padding(paddingValues)
             .fillMaxWidth(0.5f)
             .background(
                 if (note.color != null) Color(note.color) else MaterialTheme.colors.surface,
