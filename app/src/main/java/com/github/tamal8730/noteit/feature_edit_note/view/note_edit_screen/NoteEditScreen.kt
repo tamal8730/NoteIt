@@ -12,11 +12,10 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,13 +31,12 @@ import com.github.tamal8730.noteit.core.view.NoteItTextField
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_edit_note.view_model.NoteEditScreenViewModel
 import com.google.accompanist.systemuicontroller.SystemUiController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-
+import kotlinx.coroutines.launch
 
 private val noteColorPresets = listOf(
-    0xFF1B1B1B,
+    0xFF212121,
     0xFF464D77,
     0xFF5277E0,
     0xFF36827F,
@@ -49,12 +47,17 @@ private val noteColorPresets = listOf(
     0xFFA5243D
 )
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NoteEditScreen(
     viewModel: NoteEditScreenViewModel,
     systemUiController: SystemUiController,
+    onDelete: () -> Unit,
     onBack: () -> Unit,
 ) {
+
+    val modalBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val coroutineScope = rememberCoroutineScope()
 
     val taskListAdded = viewModel.tasksAdded.collectAsState().value
     val coverImageAdded = viewModel.coverImageAdded.collectAsState().value
@@ -76,120 +79,179 @@ fun NoteEditScreen(
         }
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp),
-                        text = lastUpdatedTime,
-                        textAlign = TextAlign.End,
-                        style = MaterialTheme.typography.caption,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onBack() }) {
-                        Icon(Icons.Filled.ArrowBack, "back")
-                    }
-                },
-                backgroundColor = color,
-                contentColor = MaterialTheme.colors.onBackground,
-                elevation = 0.dp
-            )
-        },
-        bottomBar = {
-            TextOptionsBar(
-                listChecked = taskListAdded,
-                onToggleList = { if (it) viewModel.addTaskList() else viewModel.removeTaskList() },
-                coverImageChecked = coverImageAdded,
-                onToggleCoverImage = {
-                    if (it) {
-                        launcher.launch("image/*")
-                    } else {
-                        viewModel.removeCoverImage()
-                    }
-                },
-                noteColor = noteColor,
-                showColorMenu = viewModel.colorMenuShown.collectAsState().value,
-                onClickColorMenu = { viewModel.toggleColorMenu() },
-                onSelectNoteColor = {
+    ModalBottomSheetLayout(
+        sheetState = modalBottomSheetState,
+        sheetContent = {
+            BottomSheet(
+                onSelectColor = {
                     viewModel.setNoteColor(it)
                     systemUiController.setSystemBarsColor(Color(it), darkIcons = false)
                 },
-                onDismissColorMenu = { viewModel.dismissColorMenu() }
+                onDelete = {
+                    viewModel.deleteNote(onDelete)
+                }
             )
         },
-        backgroundColor = color
+        scrimColor = Color.Black.copy(alpha = 0.32f)
     ) {
-        Box(modifier = Modifier.padding(it))
-        {
-            Column {
-
-                if (coverImageAdded) {
-                    CoverImage(viewModel.coverImageUri.collectAsState().value)
-                }
-
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
-                    NoteItTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = viewModel.title.collectAsState().value,
-                        textStyle = MaterialTheme.typography.h5.copy(
-                            color = MaterialTheme.colors.onBackground,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        hint = "Title",
-                        hintStyle = MaterialTheme.typography.h5
-                            .copy(
-                                color = MaterialTheme.colors.onBackground.copy(
-                                    alpha = ContentAlpha.medium
-                                )
-                            ),
-                        onValueChanged = { text -> viewModel.editTitle(text) }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    NoteItTextField(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        text = viewModel.body.collectAsState().value,
-                        textStyle = MaterialTheme.typography.body1.copy(
-                            color = MaterialTheme.colors.onBackground,
-                            lineHeight = 26.sp
-                        ),
-                        hint = "Write something...",
-                        hintStyle = MaterialTheme.typography.body1
-                            .copy(
-                                color = MaterialTheme.colors.onBackground.copy(
-                                    alpha = ContentAlpha.medium
-                                )
-                            ),
-                        onValueChanged = { text -> viewModel.editBody(text) }
-                    )
-                    if (taskListAdded) {
-
-                        val tasks = viewModel.tasks.collectAsState().value
-
-                        Spacer(modifier = Modifier.height(24.dp))
-                        TaskList(
-                            tasks = tasks,
-                            onAddNewItem = { viewModel.addTask() },
-                            onEditTask = { task, text ->
-                                viewModel.editTask(task, text)
-                            },
-                            onToggleTask = { task, checked ->
-                                if (checked) viewModel.unCheckTask(task)
-                                else viewModel.checkTask(task)
-                            }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 16.dp),
+                            text = lastUpdatedTime,
+                            textAlign = TextAlign.End,
+                            style = MaterialTheme.typography.caption,
                         )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { onBack() }) {
+                            Icon(Icons.Filled.ArrowBack, "back")
+                        }
+                    },
+                    backgroundColor = color,
+                    contentColor = MaterialTheme.colors.onBackground,
+                    elevation = 0.dp
+                )
+            },
+            bottomBar = {
+                TextOptionsBar(
+                    listChecked = taskListAdded,
+                    onToggleList = { if (it) viewModel.addTaskList() else viewModel.removeTaskList() },
+                    coverImageChecked = coverImageAdded,
+                    onToggleCoverImage = {
+                        if (it) {
+                            launcher.launch("image/*")
+                        } else {
+                            viewModel.removeCoverImage()
+                        }
+                    },
+                    onClickMore = {
+                        coroutineScope.launch { modalBottomSheetState.show() }
+                    }
+                )
+            },
+            backgroundColor = color
+        ) {
+
+            Box(modifier = Modifier.padding(it))
+            {
+                Column {
+
+                    if (coverImageAdded) {
+                        CoverImage(viewModel.coverImageUri.collectAsState().value)
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                    ) {
+                        NoteItTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = viewModel.title.collectAsState().value,
+                            textStyle = MaterialTheme.typography.h5.copy(
+                                color = MaterialTheme.colors.onBackground,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            hint = "Title",
+                            hintStyle = MaterialTheme.typography.h5
+                                .copy(
+                                    color = MaterialTheme.colors.onBackground.copy(
+                                        alpha = ContentAlpha.medium
+                                    )
+                                ),
+                            onValueChanged = { text -> viewModel.editTitle(text) }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        NoteItTextField(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            text = viewModel.body.collectAsState().value,
+                            textStyle = MaterialTheme.typography.body1.copy(
+                                color = MaterialTheme.colors.onBackground,
+                                lineHeight = 26.sp
+                            ),
+                            hint = "Write something...",
+                            hintStyle = MaterialTheme.typography.body1
+                                .copy(
+                                    color = MaterialTheme.colors.onBackground.copy(
+                                        alpha = ContentAlpha.medium
+                                    )
+                                ),
+                            onValueChanged = { text -> viewModel.editBody(text) }
+                        )
+                        if (taskListAdded) {
+
+                            val tasks = viewModel.tasks.collectAsState().value
+
+                            Spacer(modifier = Modifier.height(24.dp))
+                            TaskList(
+                                tasks = tasks,
+                                onAddNewItem = { viewModel.addTask() },
+                                onEditTask = { task, text ->
+                                    viewModel.editTask(task, text)
+                                },
+                                onToggleTask = { task, checked ->
+                                    if (checked) viewModel.unCheckTask(task)
+                                    else viewModel.checkTask(task)
+                                }
+                            )
+                        }
                     }
                 }
+
             }
 
         }
+    }
+}
+
+@Composable
+private fun BottomSheet(onSelectColor: (color: Long) -> Unit, onDelete: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(color = MaterialTheme.colors.surface)
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 32.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                noteColorPresets.map {
+                    ColorCircle(
+                        color = it,
+                        onClick = { onSelectColor(it) },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+            Tile(icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_delete),
+                    contentDescription = "delete note",
+                    tint = MaterialTheme.colors.onSurface
+                )
+            }, label = {
+                Text(text = "Delete note", color = MaterialTheme.colors.onSurface)
+            }) {
+                onDelete()
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun Tile(icon: @Composable () -> Unit, label: @Composable () -> Unit, onClick: () -> Unit) {
+    Row(modifier = Modifier.clickable { onClick() }) {
+        icon()
+        Spacer(modifier = Modifier.width(16.dp))
+        label()
     }
 }
 
@@ -312,11 +374,7 @@ fun TextOptionsBar(
     onToggleList: (Boolean) -> Unit,
     coverImageChecked: Boolean,
     onToggleCoverImage: (Boolean) -> Unit,
-    noteColor: Long,
-    showColorMenu: Boolean,
-    onClickColorMenu: () -> Unit,
-    onSelectNoteColor: (color: Long) -> Unit,
-    onDismissColorMenu: () -> Unit,
+    onClickMore: () -> Unit
 ) {
 
     Box(
@@ -334,7 +392,7 @@ fun TextOptionsBar(
                 Icon(
                     modifier = Modifier.size(24.dp),
                     painter = painterResource(id = R.drawable.ic_image),
-                    contentDescription = "add list",
+                    contentDescription = "add cover image",
                     tint = if (coverImageChecked) MaterialTheme.colors.primary
                     else MaterialTheme.colors.onBackground
                 )
@@ -359,13 +417,15 @@ fun TextOptionsBar(
                     .weight(1f)
             )
 
-            ColorCircle(
-                color = noteColor,
-                showColorMenu = showColorMenu,
-                onClick = onClickColorMenu,
-                onSelectColor = onSelectNoteColor,
-                onDismissColorMenu = onDismissColorMenu,
-            )
+
+            IconButton(onClick = { onClickMore() }) {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_more),
+                    contentDescription = "more",
+                    tint = MaterialTheme.colors.onBackground
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
         }
@@ -375,10 +435,7 @@ fun TextOptionsBar(
 @Composable
 private fun ColorCircle(
     color: Long,
-    showColorMenu: Boolean,
     onClick: () -> Unit,
-    onSelectColor: (color: Long) -> Unit,
-    onDismissColorMenu: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -388,25 +445,5 @@ private fun ColorCircle(
             .padding(2.dp)
             .background(color = Color(color), shape = CircleShape)
             .clickable { onClick() }
-    ) {
-        DropdownMenu(expanded = showColorMenu, onDismissRequest = onDismissColorMenu) {
-
-            noteColorPresets.map { selectedColor ->
-
-                DropdownMenuItem(onClick = { onSelectColor(selectedColor) }) {
-                    Box(
-                        modifier = Modifier
-                            .height(24.dp)
-                            .width(24.dp)
-                            .background(color = MaterialTheme.colors.onSurface, shape = CircleShape)
-                            .padding(2.dp)
-                            .background(color = Color(selectedColor), shape = CircleShape)
-                            .clickable { onClick() }
-                    )
-                }
-
-            }
-
-        }
-    }
+    )
 }

@@ -50,4 +50,8 @@ class NoteEditRepositoryImpl(private val noteDao: NoteDao) : NoteEditRepository 
         )
     }
 
+    override suspend fun deleteNote(id: Long) {
+        noteDao.deleteNote(id)
+    }
+
 }

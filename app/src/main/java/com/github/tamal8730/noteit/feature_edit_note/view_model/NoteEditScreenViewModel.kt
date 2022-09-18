@@ -1,6 +1,8 @@
 package com.github.tamal8730.noteit.feature_edit_note.view_model
 
 import android.net.Uri
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 
 class NoteEditScreenViewModelFactory(
     private val noteEditRepository: NoteEditRepository,
@@ -33,6 +36,7 @@ class NoteEditScreenViewModel(
     private val lastUpdateTimestampFormatter: TimestampFormatter,
 ) : ViewModel() {
 
+    private val mutex = Mutex()
 
     private val _title by lazy { MutableStateFlow<String>("") }
     val title: StateFlow<String> by lazy { _title.asStateFlow() }
@@ -57,9 +61,6 @@ class NoteEditScreenViewModel(
 
     private val _noteColor by lazy { MutableStateFlow<Long?>(null) }
     val noteColor: StateFlow<Long?> = _noteColor.asStateFlow()
-
-    private val _colorMenuShown by lazy { MutableStateFlow<Boolean>(false) }
-    val colorMenuShown: StateFlow<Boolean> = _colorMenuShown.asStateFlow()
 
 
     init {
@@ -157,7 +158,10 @@ class NoteEditScreenViewModel(
                     color = _noteColor.value,
                 )
 
-                noteID = noteEditRepository.saveNote(note)
+                if (!mutex.isLocked) {
+                    noteID = noteEditRepository.saveNote(note)
+                }
+
                 _lastUpdatedTimestamp.value = "Updated " +
                         lastUpdateTimestampFormatter.format(updatedTime)
             }
@@ -189,18 +193,17 @@ class NoteEditScreenViewModel(
         _noteColor.value = note.color
     }
 
-
-    fun toggleColorMenu() {
-        _colorMenuShown.value = !_colorMenuShown.value
-    }
-
-    fun dismissColorMenu() {
-        _colorMenuShown.value = false
+    fun deleteNote(onDelete: () -> Unit) = viewModelScope.launch {
+        noteID?.let {
+            mutex.lock()
+            noteEditRepository.deleteNote(it)
+            onDelete()
+            mutex.unlock()
+        }
     }
 
     fun setNoteColor(color: Long) {
         _noteColor.value = color
-        _colorMenuShown.value = false
     }
 
 }

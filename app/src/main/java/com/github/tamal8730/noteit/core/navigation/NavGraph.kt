@@ -76,6 +76,9 @@ fun SetupNavGraph(navController: NavHostController) {
                 ),
                 onBack = {
                     navController.popBackStack()
+                },
+                onDelete = {
+                    navController.popBackStack()
                 }
             )
 

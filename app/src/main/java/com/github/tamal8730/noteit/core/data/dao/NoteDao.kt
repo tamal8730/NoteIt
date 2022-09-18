@@ -22,7 +22,8 @@ interface NoteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveTasks(tasks: List<TaskEntity>)
 
-    @Delete
-    suspend fun deleteNote(note: NoteEntity)
+    @Transaction
+    @Query("DELETE FROM notes WHERE id = :id")
+    suspend fun deleteNote(id: Long)
 
 }
