@@ -38,20 +38,22 @@ class NotesGridScreenViewModel(
     private val _uiState = MutableStateFlow<NotesGridScreenUIState>(NotesGridScreenUIState.Empty)
     val uiState: StateFlow<NotesGridScreenUIState> = _uiState.asStateFlow()
 
+
     init {
         loadAllNotes()
     }
 
-    private fun loadAllNotes() = viewModelScope.launch {
+    fun loadAllNotes() = viewModelScope.launch {
         if (_uiState.value !is NotesGridScreenUIState.Loaded) {
             _uiState.value = NotesGridScreenUIState.Loading
         }
         val allNotes = notesArrangeRepository.getAllNotes()
         if (allNotes.isEmpty()) {
-            _uiState.value = NotesGridScreenUIState.Empty
+            _uiState.value = NotesGridScreenUIState.NoNotes
         } else {
             _uiState.value = NotesGridScreenUIState.Loaded(
                 allNotes.map {
+
                     NoteUIModel(
                         id = it.id,
                         title = it.title ?: "",
@@ -62,6 +64,7 @@ class NotesGridScreenViewModel(
                         tasks = it.tasks?.map { task -> TaskUIModel(task.task, task.complete) },
                         color = it.color
                     )
+
                 }
             )
         }

@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 class NoteEditScreenViewModelFactory(
     private val noteEditRepository: NoteEditRepository,
-    private val noteID: String?,
+    private val noteID: Long?,
     private val lastUpdateTimestampFormatter: TimestampFormatter,
 ) : ViewModelProvider.NewInstanceFactory() {
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -28,7 +28,7 @@ class NoteEditScreenViewModelFactory(
 
 class NoteEditScreenViewModel(
     private val noteEditRepository: NoteEditRepository,
-    private val noteID: String?,
+    private var noteID: Long?,
     private val lastUpdateTimestampFormatter: TimestampFormatter,
 ) : ViewModel() {
 
@@ -127,7 +127,7 @@ class NoteEditScreenViewModel(
 
     private fun saveNote() = viewModelScope.launch {
 
-        delay(2000)
+        delay(5000)
 
         while (true) {
 
@@ -137,7 +137,7 @@ class NoteEditScreenViewModel(
                 val updatedTime = DateTime.now().toISO8601Timestamp()
 
                 val note = NoteModel(
-                    id = noteID ?: "",
+                    id = noteID ?: 0,
                     title = _title.value,
                     body = _body.value,
                     coverImage = _coverImageUri.value?.toString(),
@@ -149,18 +149,22 @@ class NoteEditScreenViewModel(
                     color = null,
                 )
 
-                noteEditRepository.saveNote(note)
+                noteID = noteEditRepository.saveNote(note)
                 _lastUpdatedTimestamp.value = "Updated " +
                         lastUpdateTimestampFormatter.format(updatedTime)
             }
 
-            delay(5000)
+            delay(7000)
+
+
 
         }
 
     }
 
     private fun loadNote() = viewModelScope.launch {
+
+        val noteID = this@NoteEditScreenViewModel.noteID
 
         val note = if (noteID == null) return@launch
         else noteEditRepository.loadNote(noteID) ?: return@launch

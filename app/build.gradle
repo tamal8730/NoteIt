@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id("kotlin-kapt")
 }
 
 android {
@@ -67,5 +68,14 @@ dependencies {
 
     def nav_version = "2.5.2"
     implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    def room_version = "2.4.3"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // To use Kotlin annotation processing tool (kapt)
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
 
 }

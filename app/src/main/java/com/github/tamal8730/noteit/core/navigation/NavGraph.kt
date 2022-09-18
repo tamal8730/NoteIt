@@ -1,12 +1,15 @@
 package com.github.tamal8730.noteit.core.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.github.tamal8730.noteit.core.data.db.NoteDb
 import com.github.tamal8730.noteit.feature_arrange_notes.repository.impl.NotesArrangeRepositoryImpl
 import com.github.tamal8730.noteit.feature_arrange_notes.util.last_edit_datetime_formatter.TimeOrDateDateTimeFormatter
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.NotesGridScreen
@@ -19,6 +22,10 @@ import com.github.tamal8730.noteit.feature_edit_note.view_model.NoteEditScreenVi
 
 @Composable
 fun SetupNavGraph(navController: NavHostController) {
+
+    val context = LocalContext.current
+    val noteDao = NoteDb.getInstance(context).noteDao()
+
     NavHost(navController = navController, startDestination = Screen.NotesGridScreen.route) {
 
         composable(route = Screen.NotesGridScreen.route) {
@@ -26,17 +33,17 @@ fun SetupNavGraph(navController: NavHostController) {
             NotesGridScreen(
                 viewModel = viewModel(
                     factory = NotesGridScreenViewModelFactory(
-                        notesArrangeRepository = NotesArrangeRepositoryImpl(),
+                        notesArrangeRepository = NotesArrangeRepositoryImpl(noteDao = noteDao),
                         lastEditTimeFormatter = TimeOrDateDateTimeFormatter()
                     )
                 ),
                 onEditNote = {
-                    navController.navigate(Screen.EditNoteScreen.getFullPath(it)) {
+                    navController.navigate(Screen.EditNoteScreen.getFullPath(it.toString())) {
                         launchSingleTop = true
                     }
                 },
                 onCreateNewNote = {
-                    navController.navigate(Screen.EditNoteScreen.route) {
+                    navController.navigate(Screen.EditNoteScreen.getFullPath(null)) {
                         launchSingleTop = true
                     }
                 }
@@ -47,7 +54,9 @@ fun SetupNavGraph(navController: NavHostController) {
         composable(
             route = Screen.EditNoteScreen.route,
             arguments = listOf(
-                navArgument(Screen.EditNoteScreen.argNoteID) { type = NavType.StringType },
+                navArgument(Screen.EditNoteScreen.argNoteID) {
+                    type = NavType.StringType; nullable = true; defaultValue = null
+                },
             )
         ) { backStackEntry ->
 
@@ -56,8 +65,8 @@ fun SetupNavGraph(navController: NavHostController) {
             NoteEditScreen(
                 viewModel = viewModel(
                     factory = NoteEditScreenViewModelFactory(
-                        noteEditRepository = NoteEditRepositoryImpl(),
-                        noteID = noteID,
+                        noteEditRepository = NoteEditRepositoryImpl(noteDao),
+                        noteID = noteID?.toLong(),
                         lastUpdateTimestampFormatter = LastUpdatedDateTimeFormatter()
                     )
                 ),

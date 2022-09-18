@@ -13,18 +13,23 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.NoteUIModel
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_arrange_notes.view_model.NotesGridScreenUIState
@@ -34,10 +39,27 @@ import com.skydoves.landscapist.glide.GlideImage
 
 @Composable
 fun NotesGridScreen(
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     viewModel: NotesGridScreenViewModel,
-    onEditNote: (id: String) -> Unit,
+    onEditNote: (id: Long) -> Unit,
     onCreateNewNote: () -> Unit,
 ) {
+
+    DisposableEffect(lifecycleOwner) {
+
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadAllNotes()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+
+    }
 
     val uiState = viewModel.uiState.collectAsState().value
 
@@ -81,9 +103,7 @@ fun NotesGridScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(notes.size) { index ->
-                            Note(note = notes[index]) {
-                                onEditNote(notes[index].id)
-                            }
+                            Note(note = notes[index]) { onEditNote(notes[index].id) }
                         }
                     }
 

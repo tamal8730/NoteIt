@@ -4,7 +4,7 @@ import com.github.tamal8730.noteit.core.model.NoteModel
 
 interface NoteEditRepository {
 
-    suspend fun saveNote(note: NoteModel)
-    suspend fun loadNote(id: String): NoteModel?
+    suspend fun saveNote(note: NoteModel): Long
+    suspend fun loadNote(id: Long): NoteModel?
 
 }
