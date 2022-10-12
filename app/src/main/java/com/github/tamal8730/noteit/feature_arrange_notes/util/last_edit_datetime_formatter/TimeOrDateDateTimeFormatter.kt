@@ -1,7 +1,7 @@
 package com.github.tamal8730.noteit.feature_arrange_notes.util.last_edit_datetime_formatter
 
-import com.github.tamal8730.noteit.core.util.DateTime
-import com.github.tamal8730.noteit.core.util.TimestampFormatter
+import com.github.tamal8730.noteit.util.DateTime
+import com.github.tamal8730.noteit.util.TimestampFormatter
 
 class TimeOrDateDateTimeFormatter : TimestampFormatter {
 
@@ -27,7 +27,7 @@ class TimeOrDateDateTimeFormatter : TimestampFormatter {
         private fun pad(num: Int): String = if (num < 10) "0$num" else num.toString()
 
         private fun date(dateTime: DateTime): String =
-            "${months[dateTime.month]} ${dateTime.day}"
+            "${months[dateTime.month - 1]} ${dateTime.day}"
 
         private fun time(dateTime: DateTime): String {
             val hourIn12Hr =

@@ -1,18 +1,15 @@
 package com.github.tamal8730.noteit.feature_edit_note.view_model
 
-import android.net.Uri
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetState
+//import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.github.tamal8730.noteit.core.model.NoteModel
 import com.github.tamal8730.noteit.core.model.TaskListItemModel
-import com.github.tamal8730.noteit.core.util.DateTime
-import com.github.tamal8730.noteit.core.util.TimestampFormatter
+import com.github.tamal8730.noteit.util.DateTime
+import com.github.tamal8730.noteit.util.TimestampFormatter
 import com.github.tamal8730.noteit.feature_arrange_notes.view.notes_grid_screen.ui_model.TaskUIModel
 import com.github.tamal8730.noteit.feature_edit_note.repository.NoteEditRepository
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +31,7 @@ class NoteEditScreenViewModel(
     private val noteEditRepository: NoteEditRepository,
     private var noteID: Long?,
     private val lastUpdateTimestampFormatter: TimestampFormatter,
+    private val autosave: Boolean = true,
 ) : ViewModel() {
 
     private val mutex = Mutex()
@@ -47,8 +45,8 @@ class NoteEditScreenViewModel(
     private val _coverImageAdded by lazy { MutableStateFlow<Boolean>(false) }
     val coverImageAdded: StateFlow<Boolean> by lazy { _coverImageAdded.asStateFlow() }
 
-    private val _coverImageUri by lazy { MutableStateFlow<Uri?>(null) }
-    val coverImageUri: StateFlow<Uri?> by lazy { _coverImageUri.asStateFlow() }
+    private val _coverImageUri by lazy { MutableStateFlow<String?>(null) }
+    val coverImageUri: StateFlow<String?> by lazy { _coverImageUri.asStateFlow() }
 
     private val _tasksAdded by lazy { MutableStateFlow<Boolean>(false) }
     val tasksAdded: StateFlow<Boolean> by lazy { _tasksAdded.asStateFlow() }
@@ -65,7 +63,8 @@ class NoteEditScreenViewModel(
 
     init {
         loadNote()
-        saveNote()
+        if (autosave)
+            saveNote()
     }
 
 
@@ -114,9 +113,9 @@ class NoteEditScreenViewModel(
 
 
     //-------------- Cover image--------------
-    fun addCoverImage(uri: Uri) {
+    fun addCoverImage(path: String?) {
         _coverImageAdded.value = true
-        _coverImageUri.value = uri
+        _coverImageUri.value = path
     }
 
     fun removeCoverImage() {
@@ -183,7 +182,7 @@ class NoteEditScreenViewModel(
         _title.value = note.title ?: ""
         _body.value = note.body
         _coverImageAdded.value = note.coverImage != null
-        _coverImageUri.value = if (note.coverImage != null) Uri.parse(note.coverImage) else null
+        _coverImageUri.value = note.coverImage
         _tasksAdded.value = note.tasks != null
         _tasks.value = note.tasks?.map {
             TaskUIModel(it.task, it.complete)

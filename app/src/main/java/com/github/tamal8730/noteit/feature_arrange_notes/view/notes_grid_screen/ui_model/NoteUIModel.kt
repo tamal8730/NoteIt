@@ -6,7 +6,7 @@ data class NoteUIModel(
     val id: Long,
     val title: String,
     val body: String?,
-    val coverImage: Uri?,
+    val coverImage: String?,
     val lastModifiedAt: String,
     val tasks: List<TaskUIModel>?,
     val color: Long?,

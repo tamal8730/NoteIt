@@ -311,13 +311,13 @@ private fun TaskList(tasks: List<TaskUIModel>) {
 }
 
 @Composable
-private fun CoverImage(imageUri: Uri) {
+private fun CoverImage(imagePath: String) {
     GlideImage(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
             .clip(RoundedCornerShape(13)),
-        imageModel = imageUri,
+        imageModel = Uri.parse(imagePath),
         imageOptions = ImageOptions(
             contentScale = ContentScale.Crop
         )

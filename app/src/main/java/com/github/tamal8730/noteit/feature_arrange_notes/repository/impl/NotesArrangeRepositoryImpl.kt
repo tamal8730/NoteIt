@@ -7,6 +7,7 @@ import com.github.tamal8730.noteit.feature_arrange_notes.repository.NotesArrange
 
 class NotesArrangeRepositoryImpl(private val noteDao: NoteDao) :
     NotesArrangeRepository {
+
     override suspend fun getAllNotes(): List<NoteModel> {
 
         return noteDao.getNotes().map {
@@ -24,7 +25,7 @@ class NotesArrangeRepositoryImpl(private val noteDao: NoteDao) :
                 color = note.color,
             )
         }
-
-
     }
+
+
 }

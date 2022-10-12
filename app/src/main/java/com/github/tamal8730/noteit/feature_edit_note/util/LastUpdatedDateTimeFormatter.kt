@@ -1,7 +1,7 @@
 package com.github.tamal8730.noteit.feature_edit_note.util
 
-import com.github.tamal8730.noteit.core.util.DateTime
-import com.github.tamal8730.noteit.core.util.TimestampFormatter
+import com.github.tamal8730.noteit.util.DateTime
+import com.github.tamal8730.noteit.util.TimestampFormatter
 
 class LastUpdatedDateTimeFormatter : TimestampFormatter {
 

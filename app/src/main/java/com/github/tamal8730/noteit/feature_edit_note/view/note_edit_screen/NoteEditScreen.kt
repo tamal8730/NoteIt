@@ -51,7 +51,7 @@ private val noteColorPresets = listOf(
 @Composable
 fun NoteEditScreen(
     viewModel: NoteEditScreenViewModel,
-    systemUiController: SystemUiController,
+    systemUiController: SystemUiController? = null,
     onDelete: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -66,15 +66,17 @@ fun NoteEditScreen(
 
     val color = Color(noteColor)
 
-    SideEffect {
-        systemUiController.setSystemBarsColor(color, darkIcons = false)
+    systemUiController?.let {
+        SideEffect {
+            it.setSystemBarsColor(color, darkIcons = false)
+        }
     }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {
             if (it != null) {
-                viewModel.addCoverImage(it)
+                viewModel.addCoverImage(it.path)
             }
         }
     )
@@ -85,7 +87,7 @@ fun NoteEditScreen(
             BottomSheet(
                 onSelectColor = {
                     viewModel.setNoteColor(it)
-                    systemUiController.setSystemBarsColor(Color(it), darkIcons = false)
+                    systemUiController?.setSystemBarsColor(Color(it), darkIcons = false)
                 },
                 onDelete = {
                     viewModel.deleteNote(onDelete)
@@ -256,12 +258,12 @@ private fun Tile(icon: @Composable () -> Unit, label: @Composable () -> Unit, on
 }
 
 @Composable
-private fun CoverImage(coverImageURI: Uri?) {
+private fun CoverImage(coverImagePath: String?) {
     GlideImage(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.3f),
-        imageModel = coverImageURI,
+        imageModel = Uri.parse(coverImagePath),
         imageOptions = ImageOptions(
             contentScale = ContentScale.Crop
         )
